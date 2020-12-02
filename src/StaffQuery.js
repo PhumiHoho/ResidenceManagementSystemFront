@@ -1,174 +1,188 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { makeStyles } from '@material-ui/core/styles';
-import ListSubheader from '@material-ui/core/ListSubheader';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import Collapse from '@material-ui/core/Collapse';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import DraftsIcon from '@material-ui/icons/Drafts';
-import SendIcon from '@material-ui/icons/Send';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
-import StarBorder from '@material-ui/icons/StarBorder';
-
 import PropTypes from 'prop-types';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
+import { withStyles } from '@material-ui/core/styles';
+import ExpansionPanel from '@material-ui/core/ExpansionPanel';
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import { Typography, Container, Paper, Button, form } from '@material-ui/core';
+import { useForm, Controller } from "react-hook-form";
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import axios from 'axios';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 
-
-function TabPanel(props) {
-
-  const { children, value, index, ...other } = props;
-
-return (
-  <div
-    role="tabpanel"
-    hidden={value !== index}
-    id={`vertical-tabpanel-${index}`}
-    aria-labelledby={`vertical-tab-${index}`}
-    {...other}
-  >
-    {value === index && (
-      <Box p={3}>
-        <Typography>{children}</Typography>
-      </Box>
-    )}
-  </div>
-
-);
-    
-}
-
-TabPanel.propTypes = {
-children: PropTypes.node,
-index: PropTypes.any.isRequired,
-value: PropTypes.any.isRequired,
-};
-
-function a11yProps(index) {
-return {
-  id: `vertical-tab-${index}`,
-  'aria-controls': `vertical-tabpanel-${index}`,
-};
-}
-
-
-const useStyles = makeStyles((theme) => ({
+const styles = theme => ({
   root: {
     width: '100%',
-    maxWidth: 360,
-    backgroundColor: theme.palette.background.paper,
   },
-  nested: {
-    paddingLeft: theme.spacing(4),
+  heading: {
+    fontSize: theme.typography.pxToRem(15),
+    fontWeight: theme.typography.fontWeightRegular,
   },
-  textField: {
-    margin: 'auto',
-  },
+  submit: {},
   paper: {
     marginTop: theme.spacing(4),
-    padding: theme.spacing(2),
+    marginBottom: theme.spacing(4),
+    padding: theme.spacing(1),
     display: 'flex',
     overflow: 'hidden',
     flexDirection: 'column',
     minHeight: 200,
   },
-  tabs: {
-    borderRight: `1px solid ${theme.palette.divider}`,
+  button: {
+    padding: theme.spacing(2)
   },
-  
-}));
+});
 
-function StaffQuery() {
-  const classes = useStyles();
-  const [open, setOpen] = React.useState(true);
-  const [value, setValue] = React.useState(0);
-  
-  const handleClick = () => {
-    setOpen(!open);
+function SimpleExpansionPanel(props) {
+  const { classes } = props;
+  const [queries, setQueries] = useState([]);
+  const { register, handleSubmit, control } = useForm();
+  const fetchQueries = () => {
+    //Create a GET call to backend
+    axios.get("http://localhost:8080/query/all", { withCredentials: true }).then(response => {
+      console.log(response);
+      //Let residences = response.data (our array of residence objects)
+      setQueries(response.data);
+    }).catch(error => {
+      console.log(error);
+    })
   }
 
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
+  const onSubmit = () => {
+    window.location.href = "/staffqueryresponse"
 
-  };
+  }
 
+  //On Render call above fetch residences function to get residences from back end and store the response in 'residences'
+  useEffect(() => {
+
+    fetchQueries();
+
+  }, []);
   return (
-    <div>
-    <List
-      component="nav"
-      aria-labelledby="nested-list-subheader"
-      subheader={
-        <ListSubheader component="div" id="nested-list-subheader">
-         <h1>Staff Query Management</h1>
-        </ListSubheader>
-      }
-      className={classes.root}
-    >
-      <ListItem button>
-        <ListItemIcon>
-          <SendIcon />
-        </ListItemIcon>
-        <ListItemText primary="Sent mail" />
-      </ListItem>
-      <ListItem button>
-        <ListItemIcon>
-          <DraftsIcon />
-        </ListItemIcon>
-        <ListItemText primary="Drafts" />
-      </ListItem>
-      <ListItem button onClick={handleClick}>
-        <ListItemIcon>
-          <InboxIcon />
-        </ListItemIcon>
-        <ListItemText primary="Inbox" />
-        {open ? <ExpandLess /> : <ExpandMore />}
-      </ListItem>
-      <Collapse in={open} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <ListItem button className={classes.nested}>
-            <ListItemIcon>
-              <StarBorder />
-            </ListItemIcon>
-            <ListItemText primary="Starred" />
-          </ListItem>
-        </List>
-      </Collapse>
-    </List>
-<br></br><br></br><br></br><br></br>
-List of Approved Students
+
     <div className={classes.root}>
-      <Tabs
-        orientation="vertical"
-        variant="scrollable"
-        value={value}
-        onChange={handleChange}
-        aria-label="Vertical tabs example"
-        className={classes.tabs}
-      >
-        <Tab label="Christ Kitenge Mbuyi" {...a11yProps(0)} />
-        <Tab label="Junaid Martin" {...a11yProps(1)} />
-        <Tab label="Phumelela Hoho" {...a11yProps(2)} />
-        <Tab label="Luzuko Tshaka" {...a11yProps(3)} />
-      </Tabs>
-      <TabPanel value={value} index={0}>
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-      </TabPanel>
-      <TabPanel value={value} index={2}>
-      
-      </TabPanel>
-      <TabPanel value={value} index={3}>
-       
-      </TabPanel>
-    </div>  
-</div>
+      <h1>Student Queries</h1>
+      <Container component="main" maxWidth="lg">
+        <Paper className={classes.paper} elevation={3}>
+          <form className={classes.form} noValidate onSubmit={handleSubmit(onSubmit)}>
+            <Button className={classes.button}
+              type="submit"
+              size="large"
+              variant="contained"
+              color="primary"
+              placeholder="Enter text here"
+              className={classes.submit}
+            > Respond to Query </Button>
+          </form>
+          <ExpansionPanel>
+            <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography className={classes.heading}>Inbox</Typography>
+            </ExpansionPanelSummary>
+            <ExpansionPanelDetails>
+
+              <TableContainer className={classes.tableContainer} component={Paper}>
+                <Table className={classes.table} aria-label="residences table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="left">Query ID</TableCell>
+                      <TableCell align="left">Student Number</TableCell>
+                      <TableCell align="left">Full Name</TableCell>
+                      <TableCell align="left">Nature</TableCell>
+                      <TableCell align="left">Description</TableCell>
+                      <TableCell align="left">Log Status</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {/* Iterate through each residence and create a row for it */}
+                    {queries.map((query) => {
+                      console.log(query.logStatus)
+                      if (query.logStatus == "Processing") {
+                        return (
+
+                          <TableRow key={query.queryId}>
+                            <TableCell align="left">{query.queryId}</TableCell>
+                            <TableCell align="left">{query.studNum}</TableCell>
+                            <TableCell align="left">{query.fullName}</TableCell>
+                            <TableCell align="left">{query.nature}</TableCell>
+                            <TableCell align="left">{query.description}</TableCell>
+                            <TableCell align="left">{query.logStatus}</TableCell>
+                          </TableRow>
+                        )
+                      }
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+            </ExpansionPanelDetails>
+          </ExpansionPanel>
+          <ExpansionPanel>
+            <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography className={classes.heading}>Processed Queries</Typography>
+            </ExpansionPanelSummary>
+            <ExpansionPanelDetails>
+              <TableContainer className={classes.tableContainer} component={Paper}>
+                <Table className={classes.table} aria-label="residences table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="left">Query ID</TableCell>
+                      <TableCell align="left">Student Number</TableCell>
+                      <TableCell align="left">Full Name</TableCell>
+                      <TableCell align="left">Nature</TableCell>
+                      <TableCell align="left">Description</TableCell>
+                      <TableCell align="left">Log Status</TableCell>
+                      <TableCell align="left">Response</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {/* Iterate through each residence and create a row for it */}
+                    {queries.map((query) => {
+
+                      if (query.logStatus == "Processed") {
+                        return (
+                          <TableRow key={query.queryId}>
+                            <TableCell align="left">{query.queryId}</TableCell>
+                            <TableCell align="left">{query.studNum}</TableCell>
+                            <TableCell align="left">{query.fullName}</TableCell>
+                            <TableCell align="left">{query.nature}</TableCell>
+                            <TableCell align="left">{query.description}</TableCell>
+                            <TableCell align="left">{query.logStatus}</TableCell>
+                            <TableCell align="left">{query.response}</TableCell>
+                          </TableRow>
+                        )
+                      }
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+            </ExpansionPanelDetails>
+          </ExpansionPanel>
+        
+          <form className={classes.form} noValidate onSubmit={handleSubmit(onSubmit)}>
+            <Button
+              type="submit"
+              size="large"
+              variant="contained"
+              color="primary"
+              placeholder="Enter text here"
+              className={classes.submit}
+            > Respond to Query </Button>
+          </form>
+        </Paper>
+      </Container>
+    </div>
   );
 }
 
-export default StaffQuery;
+SimpleExpansionPanel.propTypes = {
+  classes: PropTypes.object.isRequired,
+};
+
+export default withStyles(styles)(SimpleExpansionPanel);
